@@ -20,5 +20,8 @@ namespace ProductAnalysisApp.Repositories.EFCore
         public async Task AddFavoriteAsync(Favorite favorite) => await CreateAsync(favorite);
 
         public async Task DeleteFavoriteAsync(string id) => await DeleteAsync(f => f.FavoriteId == id);
+
+        public IQueryable<Favorite> GetFavoritesByUserId(string userId)
+        => _collection.Find(f => f.UserId == userId).ToEnumerable().AsQueryable();
     }
 }

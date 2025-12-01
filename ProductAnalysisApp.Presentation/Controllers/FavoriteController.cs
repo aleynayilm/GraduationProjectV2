@@ -50,14 +50,67 @@ namespace ProductAnalysisApp.Presentation.Controllers
             return Ok(favorite);
         }
 
+        [HttpGet("mine")]
+        public async Task<IActionResult> GetMyFavorites()
+        {
+            var sw = Stopwatch.StartNew();
+            var firebaseUid = User.FindFirst("user_id")?.Value ?? User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(firebaseUid))
+            {
+                sw.Stop();
+                return BadRequest(new ApiResponse<string> { DurationMs = sw.ElapsedMilliseconds, Data = "User not authenticated." });
+            }
+
+            var favorites = await _serviceManager.FavoriteService.GetUserFavoritesAsync(firebaseUid);
+            sw.Stop();
+            return Ok(new ApiResponse<IEnumerable<Favorite>> { DurationMs = sw.ElapsedMilliseconds, Data = favorites });
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateOneFavorite([FromBody] FavoriteDtoForCreate favoriteDto)
         {
             var sw = Stopwatch.StartNew();
-            if (favoriteDto is null) return BadRequest();
-            var favorite = await _serviceManager.FavoriteService.AddFavoriteAsync(favoriteDto);
-            sw.Stop();
-            return StatusCode(201, new ApiResponse<Favorite> { DurationMs = sw.ElapsedMilliseconds, Data = favorite });
+            try
+            {
+                if (favoriteDto is null)
+                {
+                    sw.Stop();
+                    return BadRequest(new ApiResponse<string>
+                    {
+                        DurationMs = sw.ElapsedMilliseconds,
+                        Data = "Favorite is null"
+                    });
+                }
+
+                var firebaseUid = User.FindFirst("user_id")?.Value ?? User.FindFirst("uid")?.Value;
+                if (string.IsNullOrEmpty(firebaseUid))
+                {
+                    sw.Stop();
+                    return BadRequest(new ApiResponse<string>
+                    {
+                        DurationMs = sw.ElapsedMilliseconds,
+                        Data = "User not authenticated."
+                    });
+                }
+
+                var favorite = await _serviceManager.FavoriteService.AddFavoriteAsync(favoriteDto);
+
+                sw.Stop();
+                return StatusCode(201, new ApiResponse<Favorite>
+                {
+                    DurationMs = sw.ElapsedMilliseconds,
+                    Data = favorite
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                return BadRequest(new ApiResponse<string>
+                {
+                    DurationMs = sw.ElapsedMilliseconds,
+                    Data = ex.Message
+                });
+            }
         }
 
         [HttpDelete("{id}")]
@@ -67,13 +120,18 @@ namespace ProductAnalysisApp.Presentation.Controllers
             return NoContent();
         }
         [HttpPost("toggle")]
-        public IActionResult ToggleFavorite([FromBody] FavoriteDtoForCreate favoriteDto)
+        public async Task<IActionResult> ToggleFavorite([FromBody] FavoriteDtoForCreate favoriteDto)
         {
             try
             {
+                var firebaseUid = User.FindFirst("user_id")?.Value ?? User.FindFirst("uid")?.Value;
+                if (string.IsNullOrEmpty(firebaseUid)) return Unauthorized();
+
+                var user = await _serviceManager.UserService.GetOneUserByFirebaseUidAsync(firebaseUid);
+                if (user == null) return Unauthorized();
                 var existing = _serviceManager.FavoriteService
                     .GetAllFavorites()
-                    .FirstOrDefault(f => f.ProductPlatformId == favoriteDto.ProductPlatformId && f.UserId == favoriteDto.FirebaseUid);
+                    .FirstOrDefault(f => f.ProductPlatformId == favoriteDto.ProductPlatformId && f.UserId == user.Id);
 
                 if (existing is null)
                 {

@@ -56,7 +56,6 @@ namespace ProductAnalysisApp.Services
             if (user is null) throw new ArgumentNullException(nameof(user));
 
             entity.Email = user.Email;
-            entity.PasswordHash = user.PasswordHash;
             entity.FirstName = user.FirstName;
             entity.LastName = user.LastName;
             await _manager.User.UpdateOneUserAsync(entity);

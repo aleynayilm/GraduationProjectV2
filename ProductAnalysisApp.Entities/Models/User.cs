@@ -18,11 +18,7 @@ namespace ProductAnalysisApp.Entities.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-        public bool IsEmailVerified { get; set; }
         public bool PriceAlertEnabled { get; set; }
-        public string RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
-        public string PasswordHash { get; set; }
         public decimal PriceRange { get; set; }
         public string? ProfileImageUrl { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

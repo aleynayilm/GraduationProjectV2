@@ -110,11 +110,12 @@ namespace ProductAnalysisApp.Services
             if (string.IsNullOrWhiteSpace(priceString))
                 return 0;
 
-            var clean = new string(priceString.Where(c => char.IsDigit(c) || c == '.' || c == ',').ToArray())
-                        .Replace(',', '.');
+            string cleaned = priceString.Replace(".", "");
 
-            return decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
-                ? decimal.Round(value * 1000, 2)
+            cleaned = cleaned.Replace(",", ".");
+
+            return decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
+                ? value
                 : 0;
         }
 

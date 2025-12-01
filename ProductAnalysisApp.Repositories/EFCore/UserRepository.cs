@@ -38,7 +38,6 @@ namespace ProductAnalysisApp.Repositories.EFCore
             if (existing == null) return;
 
             existing.Email = user.Email;
-            existing.PasswordHash = user.PasswordHash;
             existing.FirstName = user.FirstName;
             existing.LastName = user.LastName;
 

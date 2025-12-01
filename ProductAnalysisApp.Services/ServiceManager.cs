@@ -17,7 +17,6 @@ namespace ProductAnalysisApp.Services
         public class ServiceManager : IServiceManager
         {
             private readonly Lazy<IUserService> _userService;
-            //private readonly Lazy<IAuthenticationService> _authenticationService;
             private readonly Lazy<IProductService> _productService;
             private readonly Lazy<IProductPlatformService> _productPlatformService;
             private readonly Lazy<ISearchHistoryService> _searchHistoryService;
@@ -26,15 +25,12 @@ namespace ProductAnalysisApp.Services
                 IMapper mapper)
             {
                 _userService = new Lazy<IUserService>(() => new UserManager(repositoryManager/*, mapper*/));
-                //_authenticationService = new Lazy<IAuthenticationService>(() => new AuthenticationManager(/*logger,*/ mapper, userManager, configuration));
                 _productService = new Lazy<IProductService>(() => new ProductManager(repositoryManager, mapper));
                 _favoriteService = new Lazy<IFavoriteService>(() => new FavoriteManager(repositoryManager, mapper));
                 _productPlatformService = new Lazy<IProductPlatformService>(() => new ProductPlatformManager(repositoryManager));
                 _searchHistoryService = new Lazy<ISearchHistoryService>(() => new SearchHistoryManager(repositoryManager));
             }
             public IUserService UserService => _userService.Value;
-
-            //public IAuthenticationService AuthenticationService => _authenticationService.Value;
 
             public IProductService ProductService => _productService.Value;
 

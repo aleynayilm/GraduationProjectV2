@@ -20,6 +20,7 @@ namespace ProductAnalysisApp.Entities.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string PlatformId { get; set; }
         public string ProductUrl { get; set; }
+        [BsonRepresentation(BsonType.Decimal128)]
         public decimal Price { get; set; }
         public string Currency { get; set; }
         public List<string> ProductReviewIds { get; set; } = new List<string>();

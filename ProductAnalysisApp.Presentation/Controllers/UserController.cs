@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using ProductAnalysisApp.Entities.Models;
 using ProductAnalysisApp.Services.Contracts;
 using System;
@@ -105,6 +106,42 @@ namespace ProductAnalysisApp.Presentation.Controllers
             {
                 await _manager.UserService.DeleteOneUserAsync(id);
                 return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterUserFromFirebase([FromBody] User userDto)
+        {
+            var firebaseUidFromToken = User.FindFirst("user_id")?.Value ?? User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(firebaseUidFromToken))
+                return BadRequest(new { message = "User not authenticated." });
+
+            var firebaseUid = string.IsNullOrEmpty(userDto.FirebaseUid) ? firebaseUidFromToken : userDto.FirebaseUid;
+
+            try
+            {
+                var existingUser = await _manager.UserService.GetOneUserByFirebaseUidAsync(firebaseUid);
+                if (existingUser != null)
+                    return Ok(existingUser);
+
+                var user = new User
+                {
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    FirebaseUid = firebaseUid,
+                    Email = userDto.Email,
+                    FirstName = userDto.FirstName,
+                    LastName = userDto.LastName,
+                    PriceAlertEnabled = userDto.PriceAlertEnabled,
+                    PriceRange = userDto.PriceRange,
+                    ProfileImageUrl = userDto.ProfileImageUrl,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                var created = await _manager.UserService.CreateOneUserAsync(user);
+                return StatusCode(201, created);
             }
             catch (Exception ex)
             {
