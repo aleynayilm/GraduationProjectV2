@@ -1,0 +1,6 @@
+@ProductAnalysisAppWithMongoDb_HostAddress = http://localhost:5039
+
+GET {{ProductAnalysisAppWithMongoDb_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

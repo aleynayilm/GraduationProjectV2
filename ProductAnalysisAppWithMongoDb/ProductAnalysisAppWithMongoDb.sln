@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisAppWithMongoDb", "ProductAnalysisAppWithMongoDb.csproj", "{F4A81AE1-1C82-4D6B-83F8-90291673FC58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Entities", "..\ProductAnalysisApp.Entities\ProductAnalysisApp.Entities.csproj", "{700206A6-189F-4048-9D43-741C359006C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Repositories", "..\ProductAnalysisApp.Repositories\ProductAnalysisApp.Repositories.csproj", "{D6080BBE-B8A8-47FC-944F-240C51746CD4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Services", "..\ProductAnalysisApp.Services\ProductAnalysisApp.Services.csproj", "{77B92F15-A82F-4AA3-8D65-FE79D567E151}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Presentation", "..\ProductAnalysisApp.Presentation\ProductAnalysisApp.Presentation.csproj", "{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4A81AE1-1C82-4D6B-83F8-90291673FC58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4A81AE1-1C82-4D6B-83F8-90291673FC58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4A81AE1-1C82-4D6B-83F8-90291673FC58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4A81AE1-1C82-4D6B-83F8-90291673FC58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{700206A6-189F-4048-9D43-741C359006C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700206A6-189F-4048-9D43-741C359006C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{700206A6-189F-4048-9D43-741C359006C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{700206A6-189F-4048-9D43-741C359006C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6080BBE-B8A8-47FC-944F-240C51746CD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6080BBE-B8A8-47FC-944F-240C51746CD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6080BBE-B8A8-47FC-944F-240C51746CD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6080BBE-B8A8-47FC-944F-240C51746CD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77B92F15-A82F-4AA3-8D65-FE79D567E151}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77B92F15-A82F-4AA3-8D65-FE79D567E151}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77B92F15-A82F-4AA3-8D65-FE79D567E151}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77B92F15-A82F-4AA3-8D65-FE79D567E151}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {016E5C61-D875-40BA-855E-76164E5BAB9A}
+	EndGlobalSection
+EndGlobal
