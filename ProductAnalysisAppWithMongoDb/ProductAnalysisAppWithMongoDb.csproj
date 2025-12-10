@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ProductAnalysisApp.Entities\ProductAnalysisApp.Entities.csproj" />
     <ProjectReference Include="..\ProductAnalysisApp.Presentation\ProductAnalysisApp.Presentation.csproj" />
     <ProjectReference Include="..\ProductAnalysisApp.Repositories\ProductAnalysisApp.Repositories.csproj" />

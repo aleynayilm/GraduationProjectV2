@@ -19,6 +19,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
         public ProductCompareController(HttpClient httpClient)
         {
             _httpClient = httpClient;
+            _httpClient.Timeout = TimeSpan.FromMinutes(5);
         }
 
         [HttpPost("compare")]
