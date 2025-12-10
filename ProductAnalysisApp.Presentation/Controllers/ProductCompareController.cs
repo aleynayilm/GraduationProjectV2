@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProductAnalysisApp.Entities.DataTransferObjects;
+using ProductAnalysisApp.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProductAnalysisApp.Presentation.Controllers
@@ -28,11 +30,23 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var pythonApi = "http://localhost:8000/compare";
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            var result = await response.Content.ReadFromJsonAsync<object>();
+            var result = await response.Content.ReadAsStringAsync();
             sw.Stop();
+
+            var sessionId = Guid.NewGuid().ToString();
+
+            ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
+    {
+        new ChatMessage
+        {
+            Role = "assistant",
+            Content = result
+        }
+    };
 
             return Ok(new
             {
+                sessionId,
                 response = result,
                 responseTimeMs = sw.ElapsedMilliseconds
             });
@@ -44,14 +58,61 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var pythonApi = "http://localhost:8000/api/localllmcompare";
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            var result = await response.Content.ReadFromJsonAsync<object>();
+            var result = await response.Content.ReadAsStringAsync();
             sw.Stop();
+
+            var sessionId = Guid.NewGuid().ToString();
+
+            ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
+    {
+        new ChatMessage
+        {
+            Role = "assistant",
+            Content = result
+        }
+    };
 
             return Ok(new
             {
+                sessionId,
                 response = result,
                 responseTimeMs = sw.ElapsedMilliseconds
             });
+        }
+        [HttpPost("chat")]
+        public async Task<IActionResult> ContinueChat([FromBody] ContinueChatRequest request)
+        {
+            if (!ChatSessionStore.Sessions.ContainsKey(request.SessionId))
+                return BadRequest("Session not found");
+
+            var pythonApi = "http://localhost:8000/api/chat";
+
+            var payload = new
+            {
+                sessionId = request.SessionId,
+                message = request.Message,
+                history = ChatSessionStore.Sessions[request.SessionId]
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(pythonApi, payload);
+            var result = await response.Content.ReadAsStringAsync();
+
+            ChatSessionStore.Sessions[request.SessionId].Add(
+                new ChatMessage { Role = "user", Content = request.Message }
+            );
+            var json = JsonSerializer.Deserialize<Dictionary<string, string>>(result);
+            var reply = json["reply"];
+            ChatSessionStore.Sessions[request.SessionId].Add(
+                new ChatMessage { Role = "assistant", Content = reply }
+            );
+
+            return Ok(new { response = result });
+        }
+
+        public class ContinueChatRequest
+        {
+            public string SessionId { get; set; }
+            public string Message { get; set; }
         }
         public class UrlRequest
         {
