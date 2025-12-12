@@ -18,7 +18,10 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpClient<PythonScraperService>();
+builder.Services.AddHttpClient<PythonScraperService>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
 
 builder.Services.ConfigureMongoContext(builder.Configuration);
 builder.Services.ConfigureRepositoryManager();

@@ -30,7 +30,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var pythonApi = "http://localhost:8000/compare";
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            var result = await response.Content.ReadAsStringAsync();
+            var resultObj = await response.Content.ReadFromJsonAsync<object>();
+            var resultJson = JsonSerializer.Serialize(resultObj);
             sw.Stop();
 
             var sessionId = Guid.NewGuid().ToString();
@@ -40,14 +41,14 @@ namespace ProductAnalysisApp.Presentation.Controllers
         new ChatMessage
         {
             Role = "assistant",
-            Content = result
+            Content = resultJson
         }
     };
 
             return Ok(new
             {
                 sessionId,
-                response = result,
+                response = resultObj,
                 responseTimeMs = sw.ElapsedMilliseconds
             });
         }
@@ -58,7 +59,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var pythonApi = "http://localhost:8000/api/localllmcompare";
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            var result = await response.Content.ReadAsStringAsync();
+            var resultObj = await response.Content.ReadFromJsonAsync<object>();
+            var resultJson = JsonSerializer.Serialize(resultObj);
             sw.Stop();
 
             var sessionId = Guid.NewGuid().ToString();
@@ -68,14 +70,14 @@ namespace ProductAnalysisApp.Presentation.Controllers
         new ChatMessage
         {
             Role = "assistant",
-            Content = result
+            Content = resultJson
         }
     };
 
             return Ok(new
             {
                 sessionId,
-                response = result,
+                response = resultObj,
                 responseTimeMs = sw.ElapsedMilliseconds
             });
         }
