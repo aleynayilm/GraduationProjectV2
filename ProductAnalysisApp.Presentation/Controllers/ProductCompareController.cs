@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProductAnalysisApp.Entities.DataTransferObjects;
+using ProductAnalysisApp.Entities.Models;
 using ProductAnalysisApp.Services;
 using System;
 using System.Collections.Generic;
@@ -31,25 +32,25 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
             var resultObj = await response.Content.ReadFromJsonAsync<object>();
-            var resultJson = JsonSerializer.Serialize(resultObj);
             sw.Stop();
 
             var sessionId = Guid.NewGuid().ToString();
+            var assistantContent = JsonSerializer.Serialize(resultObj);
 
             ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
     {
         new ChatMessage
         {
             Role = "assistant",
-            Content = resultJson
+            Content = assistantContent
         }
     };
 
-            return Ok(new
+            return Ok(new ApiResponse<object>
             {
-                sessionId,
-                response = resultObj,
-                responseTimeMs = sw.ElapsedMilliseconds
+                SessionId = sessionId,
+                Data = resultObj,
+                DurationMs = sw.ElapsedMilliseconds
             });
         }
         [HttpPost("localllmcompare")]
@@ -60,25 +61,25 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
             var resultObj = await response.Content.ReadFromJsonAsync<object>();
-            var resultJson = JsonSerializer.Serialize(resultObj);
             sw.Stop();
 
             var sessionId = Guid.NewGuid().ToString();
+            var assistantContent = JsonSerializer.Serialize(resultObj);
 
             ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
     {
         new ChatMessage
         {
             Role = "assistant",
-            Content = resultJson
+            Content = assistantContent
         }
     };
 
-            return Ok(new
+            return Ok(new ApiResponse<object>
             {
-                sessionId,
-                response = resultObj,
-                responseTimeMs = sw.ElapsedMilliseconds
+                SessionId = sessionId,
+                Data = resultObj,
+                DurationMs = sw.ElapsedMilliseconds
             });
         }
         [HttpPost("chat")]
@@ -91,26 +92,67 @@ namespace ProductAnalysisApp.Presentation.Controllers
 
             var payload = new
             {
-                sessionId = request.SessionId,
                 message = request.Message,
                 history = ChatSessionStore.Sessions[request.SessionId]
             };
-
+            var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, payload);
-            var result = await response.Content.ReadAsStringAsync();
+            var resultObj = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+            sw.Stop();
+
+            var reply = resultObj?["reply"] ?? "";
 
             ChatSessionStore.Sessions[request.SessionId].Add(
                 new ChatMessage { Role = "user", Content = request.Message }
             );
-            var json = JsonSerializer.Deserialize<Dictionary<string, string>>(result);
-            var reply = json["reply"];
             ChatSessionStore.Sessions[request.SessionId].Add(
                 new ChatMessage { Role = "assistant", Content = reply }
             );
 
-            return Ok(new { response = result });
+            return Ok(new ApiResponse<string>
+            {
+                SessionId = request.SessionId,
+                Data = reply,
+                DurationMs = sw.ElapsedMilliseconds
+            });
         }
 
+        [HttpPost("chat-cloud")]
+        public async Task<IActionResult> ContinueChatCloud([FromBody] ContinueChatRequest request)
+        {
+            if (!ChatSessionStore.Sessions.ContainsKey(request.SessionId))
+                return BadRequest("Session not found");
+
+            var pythonApi = "http://localhost:8000/api/chat-cloud";
+
+            var payload = new
+            {
+                message = request.Message,
+                history = ChatSessionStore.Sessions[request.SessionId]
+            };
+
+            var sw = Stopwatch.StartNew();
+            var response = await _httpClient.PostAsJsonAsync(pythonApi, payload);
+            var resultObj = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+            sw.Stop();
+
+            var reply = resultObj?["reply"] ?? "";
+
+            ChatSessionStore.Sessions[request.SessionId].Add(
+                new ChatMessage { Role = "user", Content = request.Message }
+            );
+
+            ChatSessionStore.Sessions[request.SessionId].Add(
+                new ChatMessage { Role = "assistant", Content = reply }
+            );
+
+            return Ok(new ApiResponse<string>
+            {
+                SessionId = request.SessionId,
+                Data = reply,
+                DurationMs = sw.ElapsedMilliseconds
+            });
+        }
         public class ContinueChatRequest
         {
             public string SessionId { get; set; }
