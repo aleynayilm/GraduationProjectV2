@@ -22,13 +22,13 @@ namespace ProductAnalysisApp.Presentation.Controllers
         public ProductCompareController(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _httpClient.Timeout = TimeSpan.FromMinutes(5);
+            //_httpClient.Timeout = TimeSpan.FromMinutes(5);
         }
 
         [HttpPost("compare")]
         public async Task<IActionResult> CompareProducts([FromBody] UrlRequest request)
         {
-            var pythonApi = "http://localhost:8000/compare";
+            var pythonApi = "http://localhost:8000//api/cloudllmcompare";
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
             var resultObj = await response.Content.ReadFromJsonAsync<object>();
@@ -60,11 +60,52 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var pythonApi = "http://localhost:8000/api/localllmcompare";
             var sw = Stopwatch.StartNew();
             var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            var resultObj = await response.Content.ReadFromJsonAsync<object>();
+            //var resultObj = await response.Content.ReadFromJsonAsync<object>();
             sw.Stop();
+            if (!response.IsSuccessStatusCode)
+                return StatusCode(500, "Python API error");
+
+            var jobInfo = await response.Content.ReadFromJsonAsync<LlmJobCreateResponse>();
+
+            return Ok(new ApiResponse<object>
+            {
+                SessionId = null,
+                Data = jobInfo,
+                DurationMs = sw.ElapsedMilliseconds
+            });
+        }
+
+        [HttpGet("localllmcompare/result/{jobId}")]
+        public async Task<IActionResult> GetLocalLlmResult(string jobId)
+        {
+            var pythonApi = $"http://localhost:8000/api/localllmcompare/result/{jobId}";
+
+            var response = await _httpClient.GetAsync(pythonApi);
+
+            if (!response.IsSuccessStatusCode)
+                return StatusCode(500, "Python API error");
+
+            var jobResult = await response.Content.ReadFromJsonAsync<LlmJobResultResponse>();
+
+            if (jobResult.Status != "completed")
+            {
+                return Ok(new ApiResponse<object>
+                {
+                    Data = jobResult,
+                    DurationMs = 0
+                });
+            }
+            if (jobResult.Status == "failed")
+            {
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Data = jobResult.Error,
+                    DurationMs = 0
+                });
+            }
 
             var sessionId = Guid.NewGuid().ToString();
-            var assistantContent = JsonSerializer.Serialize(resultObj);
+            var assistantContent = JsonSerializer.Serialize(jobResult.Result);
 
             ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
     {
@@ -78,8 +119,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
             return Ok(new ApiResponse<object>
             {
                 SessionId = sessionId,
-                Data = resultObj,
-                DurationMs = sw.ElapsedMilliseconds
+                Data = jobResult.Result,
+                DurationMs = 0
             });
         }
         [HttpPost("chat")]
