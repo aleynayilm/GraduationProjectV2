@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using ProductAnalysisApp.Entities.Models;
+using ProductAnalysisApp.Extensions;
 using ProductAnalysisApp.Services.Contracts;
 using System;
 using System.Collections.Generic;
@@ -113,13 +115,14 @@ namespace ProductAnalysisApp.Presentation.Controllers
             }
         }
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterUserFromFirebase([FromBody] User userDto)
+        [Authorize]
+        public async Task<IActionResult> RegisterUserFromFirebase([FromBody] RegisterRequest request)
         {
-            var firebaseUidFromToken = User.FindFirst("user_id")?.Value ?? User.FindFirst("uid")?.Value;
-            if (string.IsNullOrEmpty(firebaseUidFromToken))
-                return BadRequest(new { message = "User not authenticated." });
+            var firebaseUid = User.GetFirebaseUid();
+            var email = User.GetEmail();
 
-            var firebaseUid = string.IsNullOrEmpty(userDto.FirebaseUid) ? firebaseUidFromToken : userDto.FirebaseUid;
+            if (string.IsNullOrEmpty(firebaseUid))
+                return Unauthorized();
 
             try
             {
@@ -131,12 +134,11 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 {
                     Id = ObjectId.GenerateNewId().ToString(),
                     FirebaseUid = firebaseUid,
-                    Email = userDto.Email,
-                    FirstName = userDto.FirstName,
-                    LastName = userDto.LastName,
-                    PriceAlertEnabled = userDto.PriceAlertEnabled,
-                    PriceRange = userDto.PriceRange,
-                    ProfileImageUrl = userDto.ProfileImageUrl,
+                    Email = email ?? request.Email ?? "",
+                    FirstName = request.FirstName ?? "",
+                    LastName = request.LastName ?? "",
+                    PriceAlertEnabled = false,
+                    PriceRange = 0,
                     CreatedDate = DateTime.UtcNow
                 };
 
@@ -148,5 +150,29 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+        public record RegisterRequest(
+            string? Email,
+            string? FirstName,
+            string? LastName
+        );
+
+        [HttpPut("push-token")]
+        [Authorize]
+        public async Task<IActionResult> UpdatePushToken([FromBody] UpdatePushTokenRequest request)
+        {
+            var firebaseUid = User.GetFirebaseUid();
+            if (string.IsNullOrEmpty(firebaseUid))
+                return Unauthorized();
+
+            var user = await _manager.UserService.GetOneUserByFirebaseUidAsync(firebaseUid);
+            if (user == null) return NotFound();
+
+            user.PushToken = request.PushToken;
+            await _manager.UserService.UpdateOneUserAsync(user.Id, user);
+
+            return NoContent();
+        }
+
+        public record UpdatePushTokenRequest(string PushToken);
     }
 }

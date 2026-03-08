@@ -21,6 +21,7 @@ namespace ProductAnalysisApp.Entities.Models
         public bool PriceAlertEnabled { get; set; }
         public decimal PriceRange { get; set; }
         public string? ProfileImageUrl { get; set; }
+        public string? PushToken { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public List<string> FavoriteIds { get; set; } = new List<string>();
         public List<string> SearchHistoryIds { get; set; } = new List<string>();

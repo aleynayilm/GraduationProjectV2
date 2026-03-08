@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProductAnalysisApp.Entities.DataTransferObjects;
 using ProductAnalysisApp.Entities.Models;
+using ProductAnalysisApp.Extensions;
 using ProductAnalysisApp.Services;
+using ProductAnalysisApp.Services.Messaging;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,195 +21,210 @@ namespace ProductAnalysisApp.Presentation.Controllers
     [Route("api/[controller]")]
     public class ProductCompareController : ControllerBase
     {
-        private readonly HttpClient _httpClient;
+        private readonly RabbitMqPublisher _rabbit;
+        private readonly RedisService _redis;
 
-        public ProductCompareController(HttpClient httpClient)
+        public ProductCompareController(RabbitMqPublisher rabbit, RedisService redis)
         {
-            _httpClient = httpClient;
-            //_httpClient.Timeout = TimeSpan.FromMinutes(5);
+            _redis = redis;
+            _rabbit = rabbit;
         }
 
-        [HttpPost("compare")]
-        public async Task<IActionResult> CompareProducts([FromBody] UrlRequest request)
+        [HttpPost("cloudllmcompare")]
+        [Authorize]
+        public async Task<IActionResult> CompareCloudLlm([FromBody] UrlRequest request)
         {
-            var pythonApi = "http://localhost:8000//api/cloudllmcompare";
-            var sw = Stopwatch.StartNew();
-            var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            var resultObj = await response.Content.ReadFromJsonAsync<object>();
-            sw.Stop();
+            var firebaseUid = User.GetFirebaseUid()!;
 
-            var sessionId = Guid.NewGuid().ToString();
-            var assistantContent = JsonSerializer.Serialize(resultObj);
+            var jobId = await _rabbit.PublishAsync(
+                RabbitMqPublisher.QueueCloudLlm,
+                new { urls = request.Urls, userId = firebaseUid });
 
-            ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
-    {
-        new ChatMessage
-        {
-            Role = "assistant",
-            Content = assistantContent
-        }
-    };
-
-            return Ok(new ApiResponse<object>
+            await _redis.SetJobAsync(new JobResult
             {
-                SessionId = sessionId,
-                Data = resultObj,
-                DurationMs = sw.ElapsedMilliseconds
+                JobId = jobId,
+                Status = "pending",
+                UserId = firebaseUid,
+                JobType = "cloud_llm_compare"
             });
+
+            await _redis.SetSessionAsync(jobId, new List<ChatMessage>());
+
+            return Accepted(new { jobId });
         }
+
+        [HttpGet("cloudllmcompare/{jobId}")]
+        [Authorize]
+        public async Task<IActionResult> GetCloudLlmResult(string jobId)
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+            var result = await _redis.GetJobForUserAsync(jobId, firebaseUid);
+
+            if (result == null)
+                return Ok(new { jobId, status = "pending" });
+
+            if (result.Status == "completed")
+            {
+                var session = await _redis.GetSessionAsync(jobId);
+                if (session.Count == 0 && result.Data != null)
+                {
+                    var content = result.Data is JsonElement el
+                        ? el.GetRawText()                    
+                        : JsonSerializer.Serialize(result.Data);
+
+                    session.Add(new ChatMessage
+                    {
+                        Role = "assistant",
+                        Content = content
+                    });
+                    await _redis.SetSessionAsync(jobId, session);
+                }
+            }
+
+            return Ok(new { jobId, status = result.Status, data = result.Data });
+        }
+
         [HttpPost("localllmcompare")]
+        [Authorize]
         public async Task<IActionResult> CompareLocalLlm([FromBody] LocalLlmCompareRequest request)
         {
+            var firebaseUid = User.GetFirebaseUid()!;
 
-            var pythonApi = "http://localhost:8000/api/localllmcompare";
-            var sw = Stopwatch.StartNew();
-            var response = await _httpClient.PostAsJsonAsync(pythonApi, request);
-            //var resultObj = await response.Content.ReadFromJsonAsync<object>();
-            sw.Stop();
-            if (!response.IsSuccessStatusCode)
-                return StatusCode(500, "Python API error");
+            var jobId = await _rabbit.PublishAsync(
+             RabbitMqPublisher.QueueLocalLlm,
+             new { products = request.Products, userId = firebaseUid});
 
-            var jobInfo = await response.Content.ReadFromJsonAsync<LlmJobCreateResponse>();
-
-            return Ok(new ApiResponse<object>
+            await _redis.SetJobAsync(new JobResult
             {
-                SessionId = null,
-                Data = jobInfo,
-                DurationMs = sw.ElapsedMilliseconds
+                JobId = jobId,
+                Status = "pending",
+                UserId = firebaseUid,
+                JobType = "local_llm_compare"
             });
+
+            await _redis.SetSessionAsync(jobId, new List<ChatMessage>());
+
+            return Accepted(new { jobId });
         }
 
-        [HttpGet("localllmcompare/result/{jobId}")]
+        [HttpGet("localllmcompare/{jobId}")]
+        [Authorize]
         public async Task<IActionResult> GetLocalLlmResult(string jobId)
         {
-            var pythonApi = $"http://localhost:8000/api/localllmcompare/result/{jobId}";
+            var firebaseUid = User.GetFirebaseUid()!;
+            var result = await _redis.GetJobForUserAsync(jobId, firebaseUid);
 
-            var response = await _httpClient.GetAsync(pythonApi);
+            if (result == null)
+                return Ok(new { jobId, status = "pending" });
 
-            if (!response.IsSuccessStatusCode)
-                return StatusCode(500, "Python API error");
-
-            var jobResult = await response.Content.ReadFromJsonAsync<LlmJobResultResponse>();
-
-            if (jobResult.Status != "completed")
+            if (result.Status == "completed")
             {
-                return Ok(new ApiResponse<object>
+                var session = await _redis.GetSessionAsync(jobId);
+                if (session.Count == 0 && result.Data != null)
                 {
-                    Data = jobResult,
-                    DurationMs = 0
-                });
-            }
-            if (jobResult.Status == "failed")
-            {
-                return StatusCode(500, new ApiResponse<object>
-                {
-                    Data = jobResult.Error,
-                    DurationMs = 0
-                });
+                    var content = result.Data is JsonElement el
+                        ? el.GetRawText()                    
+                        : JsonSerializer.Serialize(result.Data);
+
+                    session.Add(new ChatMessage
+                    {
+                        Role = "assistant",
+                        Content = content
+                    });
+                    await _redis.SetSessionAsync(jobId, session);
+                }
             }
 
-            var sessionId = Guid.NewGuid().ToString();
-            var assistantContent = JsonSerializer.Serialize(jobResult.Result);
-
-            ChatSessionStore.Sessions[sessionId] = new List<ChatMessage>
-    {
-        new ChatMessage
-        {
-            Role = "assistant",
-            Content = assistantContent
+            return Ok(new { jobId, status = result.Status, data = result.Data });
         }
-    };
 
-            return Ok(new ApiResponse<object>
-            {
-                SessionId = sessionId,
-                Data = jobResult.Result,
-                DurationMs = 0
-            });
-        }
-        [HttpPost("chat")]
-        public async Task<IActionResult> ContinueChat([FromBody] ContinueChatRequest request)
+        [HttpPost("chat-local")]
+        [Authorize]
+        public async Task<IActionResult> ContinueChatLocal([FromBody] ContinueChatRequest request)
         {
-            if (!ChatSessionStore.Sessions.ContainsKey(request.SessionId))
-                return BadRequest("Session not found");
+            var firebaseUid = User.GetFirebaseUid()!;
 
-            var pythonApi = "http://localhost:8000/api/chat";
+            var session = await _redis.GetSessionAsync(request.SessionId);
+            if (session == null)
+                return BadRequest(new { message = "Session bulunamadı." });
 
-            var payload = new
+            var historySnapshot = new List<ChatMessage>(session);
+            session.Add(new ChatMessage { Role = "user", Content = request.Message });
+            await _redis.SetSessionAsync(request.SessionId, session);
+
+            var jobId = await _rabbit.PublishAsync(
+                RabbitMqPublisher.QueueChatLocal,
+                new
+                {
+                    message = request.Message,
+                    history = historySnapshot,
+                    userId = firebaseUid,
+                    sessionId = request.SessionId
+                });
+
+            await _redis.SetJobAsync(new JobResult
             {
-                message = request.Message,
-                history = ChatSessionStore.Sessions[request.SessionId]
-            };
-            var sw = Stopwatch.StartNew();
-            var response = await _httpClient.PostAsJsonAsync(pythonApi, payload);
-            var resultObj = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-            sw.Stop();
-
-            var reply = resultObj?["reply"] ?? "";
-
-            ChatSessionStore.Sessions[request.SessionId].Add(
-                new ChatMessage { Role = "user", Content = request.Message }
-            );
-            ChatSessionStore.Sessions[request.SessionId].Add(
-                new ChatMessage { Role = "assistant", Content = reply }
-            );
-
-            return Ok(new ApiResponse<string>
-            {
-                SessionId = request.SessionId,
-                Data = reply,
-                DurationMs = sw.ElapsedMilliseconds
+                JobId = jobId,
+                Status = "pending",
+                UserId = firebaseUid,
+                JobType = "chat"
             });
+
+            return Accepted(new { jobId, sessionId = request.SessionId });
         }
 
         [HttpPost("chat-cloud")]
+        [Authorize]
         public async Task<IActionResult> ContinueChatCloud([FromBody] ContinueChatRequest request)
         {
-            if (!ChatSessionStore.Sessions.ContainsKey(request.SessionId))
-                return BadRequest("Session not found");
+            var firebaseUid = User.GetFirebaseUid()!;
+            var session = await _redis.GetSessionAsync(request.SessionId);
+            if (session == null)
+                return BadRequest(new { message = "Session bulunamadı." });
 
-            var pythonApi = "http://localhost:8000/api/chat-cloud";
+            var historySnapshot = new List<ChatMessage>(session);
+            session.Add(new ChatMessage { Role = "user", Content = request.Message });
+            await _redis.SetSessionAsync(request.SessionId, session);
 
-            var payload = new
+            var jobId = await _rabbit.PublishAsync(
+                RabbitMqPublisher.QueueChatCloud,
+                new
+                {
+                    message = request.Message,
+                    history = historySnapshot,
+                    userId = firebaseUid,
+                    sessionId = request.SessionId 
+                });
+
+            await _redis.SetJobAsync(new JobResult
             {
-                message = request.Message,
-                history = ChatSessionStore.Sessions[request.SessionId]
-            };
-
-            var sw = Stopwatch.StartNew();
-            var response = await _httpClient.PostAsJsonAsync(pythonApi, payload);
-            var resultObj = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-            sw.Stop();
-
-            var reply = resultObj?["reply"] ?? "";
-
-            ChatSessionStore.Sessions[request.SessionId].Add(
-                new ChatMessage { Role = "user", Content = request.Message }
-            );
-
-            ChatSessionStore.Sessions[request.SessionId].Add(
-                new ChatMessage { Role = "assistant", Content = reply }
-            );
-
-            return Ok(new ApiResponse<string>
-            {
-                SessionId = request.SessionId,
-                Data = reply,
-                DurationMs = sw.ElapsedMilliseconds
+                JobId = jobId,
+                Status = "pending",
+                UserId = firebaseUid,
+                JobType = "chat_cloud"
             });
+
+            return Accepted(new { jobId, sessionId = request.SessionId });
         }
-        public class ContinueChatRequest
+
+        [HttpGet("result/{jobId}")]
+        public async Task<IActionResult> GetResult(string jobId)
         {
-            public string SessionId { get; set; }
-            public string Message { get; set; }
+            var firebaseUid = User.GetFirebaseUid()!;
+            var result = await _redis.GetJobForUserAsync(jobId, firebaseUid);
+
+            return Ok(result ?? new JobResult { JobId = jobId, Status = "pending" });
         }
-        public class UrlRequest
-        {
-            public List<string> Urls { get; set; }
+
+        public class UrlRequest { 
+            public List<string> Urls { get; set; } = []; 
         }
-        public class LocalLlmCompareRequest
-        {
-            public List<ProductForComparisonDto> Products { get; set; }
+        public class LocalLlmCompareRequest { 
+            public List<ProductForComparisonDto> Products { get; set; } = []; 
+        }
+        public class ContinueChatRequest {
+            public string SessionId { get; set; } = ""; 
+            public string Message { get; set; } = ""; 
         }
     }
 }
