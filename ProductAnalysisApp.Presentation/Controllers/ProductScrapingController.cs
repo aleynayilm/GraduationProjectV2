@@ -28,7 +28,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
         public ProductScrapingController(IServiceManager manager, RabbitMqPublisher rabbit, ILogger<ProductScrapingController> logger, RedisService redis)
         {
             _manager = manager;
-            _rabbit= rabbit;
+            _rabbit = rabbit;
             _logger = logger;
             _redis = redis;
         }
@@ -51,7 +51,16 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 CreatedAt = DateTime.UtcNow
             });
 
-            _logger.LogInformation("[JOB] Scrape kuyruğa alındı: {JobId} | User: {Uid}", jobId, firebaseUid);
+            var recent = await _manager.SearchHistoryService.GetRecentSearchesAsync(firebaseUid);
+            var alreadyExists = recent.Any(h =>
+                string.Equals(h.SearchUrl, request.Url, StringComparison.OrdinalIgnoreCase));
+
+            if (!alreadyExists)
+                await _manager.SearchHistoryService.AddSearchAsync(request.Url, firebaseUid);
+
+            _logger.LogInformation(
+                "[JOB] Scrape kuyruğa alındı: {JobId} | User: {Uid}", jobId, firebaseUid);
+
             return Accepted(new { jobId });
         }
 
@@ -77,6 +86,15 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 .Select(j => new { j.JobId, j.Status, j.JobType, j.CreatedAt, j.FinishedAt });
 
             return Ok(jobs);
+        }
+
+        [HttpGet("search-history")]
+        [Authorize]
+        public async Task<IActionResult> GetSearchHistory()
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+            var history = await _manager.SearchHistoryService.GetRecentSearchesAsync(firebaseUid);
+            return Ok(history);
         }
     }
 }

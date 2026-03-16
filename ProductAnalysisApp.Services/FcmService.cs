@@ -74,6 +74,51 @@ namespace ProductAnalysisApp.Services
             }
         }
 
+        public async Task SendPriceDropAsync(
+            string pushToken,
+            string productName,
+            decimal oldPrice,
+            decimal newPrice,
+            string productUrl)
+        {
+            try
+            {
+                var dropPercent = Math.Round(((oldPrice - newPrice) / oldPrice) * 100, 1);
+
+                var message = new Message
+                {
+                    Token = pushToken,
+                    Notification = new Notification
+                    {
+                        Title = $"Fiyat Düştü! %{dropPercent} indirim",
+                        Body = $"{productName}: {oldPrice:N0} TL → {newPrice:N0} TL"
+                    },
+                    Data = new Dictionary<string, string>
+            {
+                { "type",       "price_drop"         },
+                { "productUrl", productUrl            },
+                { "oldPrice",   oldPrice.ToString()   },
+                { "newPrice",   newPrice.ToString()   },
+                { "dropPercent",dropPercent.ToString()}
+            }
+                };
+
+                await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                _logger.LogInformation(
+                    "[FCM] Fiyat düşüşü bildirimi gönderildi: {Product}", productName);
+            }
+            catch (FirebaseMessagingException ex)
+                when (ex.MessagingErrorCode is MessagingErrorCode.Unregistered
+                                            or MessagingErrorCode.InvalidArgument)
+            {
+                throw new InvalidPushTokenException(pushToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[FCM] Fiyat bildirimi gönderilemedi: {Product}", productName);
+            }
+        }
+
         private static (string title, string body) BuildMessage(string jobType, bool success)
             => (jobType, success) switch
             {

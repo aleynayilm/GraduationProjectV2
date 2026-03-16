@@ -9,7 +9,6 @@ namespace ProductAnalysisAppWithMongoDb.Utilities.AutoMapper
     {
         public MappingProfile()
         {
-            CreateMap<UserForRegistrationDto, User>();
             CreateMap<ProductForScrapingDto, Product>();
             CreateMap<FavoriteDtoForCreate, Favorite>();
             CreateMap<ProductDtoForCreate, Product>();

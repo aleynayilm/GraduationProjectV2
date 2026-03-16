@@ -22,11 +22,11 @@ namespace ProductAnalysisApp.Services
             private readonly Lazy<ISearchHistoryService> _searchHistoryService;
             private readonly Lazy<IFavoriteService> _favoriteService;
             public ServiceManager(IRepositoryManager repositoryManager, /*ILoggerService logger*/
-                IMapper mapper)
+                IMapper mapper, IHttpClientFactory httpClientFactory)
             {
                 _userService = new Lazy<IUserService>(() => new UserManager(repositoryManager/*, mapper*/));
                 _productService = new Lazy<IProductService>(() => new ProductManager(repositoryManager, mapper));
-                _favoriteService = new Lazy<IFavoriteService>(() => new FavoriteManager(repositoryManager, mapper));
+                _favoriteService = new Lazy<IFavoriteService>(() => new FavoriteManager(repositoryManager, mapper, httpClientFactory));
                 _productPlatformService = new Lazy<IProductPlatformService>(() => new ProductPlatformManager(repositoryManager));
                 _searchHistoryService = new Lazy<ISearchHistoryService>(() => new SearchHistoryManager(repositoryManager));
             }

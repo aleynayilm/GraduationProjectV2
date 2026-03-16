@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using ProductAnalysisApp.Repositories.Contracts;
 using ProductAnalysisApp.Services;
 using ProductAnalysisApp.Services.Messaging;
 using ProductAnalysisAppWithMongoDb.Extensions;
 using ProductAnalysisAppWithMongoDb.Infrastructure;
 using ProductAnalysisAppWithMongoDb.Middleware;
 using ProductAnalysisAppWithMongoDb.Utilities.AutoMapper;
+using Quartz;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,9 +40,20 @@ builder.Services.AddScoped<FcmService>();
 builder.Services.AddHostedService<JobResultConsumer>();
 builder.Services.AddHttpClient<PythonScraperService>(client =>
 {
+    client.BaseAddress = new Uri(
+        builder.Configuration["PythonScraperService:BaseUrl"] ?? "http://localhost:8000");
     client.Timeout = TimeSpan.FromMinutes(5);
 });
+// Quartz 
+builder.Services.AddQuartz(q =>
+{
+    q.UseMicrosoftDependencyInjectionJobFactory();
+});
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+builder.Services.AddSingleton<UserJobScheduler>();
 
+// Email
+builder.Services.AddScoped<EmailService>();
 builder.Services.ConfigureMongoContext(builder.Configuration);
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
@@ -51,6 +64,19 @@ builder.Services.AddAuthentication("Firebase")
                FirebaseAuthHandler>("Firebase", _ => { });
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var repoManager = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
+    var userRepo = repoManager.User;
+    var scheduler = scope.ServiceProvider.GetRequiredService<UserJobScheduler>();
+
+    var allUsers = await userRepo.GetAllUsersAsync();
+    var activeUsers = allUsers
+        .Where(u => u.PriceAlertEnabled)
+        .Select(u => (u.FirebaseUid, u.PriceCheckIntervalHours));
+
+    await scheduler.RestoreAllJobsAsync(activeUsers);
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

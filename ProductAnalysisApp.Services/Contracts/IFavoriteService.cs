@@ -15,5 +15,7 @@ namespace ProductAnalysisApp.Services.Contracts
         Task<Favorite> AddFavoriteAsync(FavoriteDtoForCreate favoriteDto);
         Task DeleteFavoriteAsync(string id);
         Task<IEnumerable<Favorite>> GetUserFavoritesAsync(string firebaseUid);
+        Task<List<FavoriteDetailDto>> GetUserFavoriteDetailsAsync(string firebaseUid);
+        Task CategorizeFavoritesAsync(string firebaseUid);
     }
 }

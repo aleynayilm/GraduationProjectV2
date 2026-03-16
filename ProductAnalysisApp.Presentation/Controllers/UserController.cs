@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using ProductAnalysisApp.Entities.Models;
 using ProductAnalysisApp.Extensions;
+using ProductAnalysisApp.Services;
 using ProductAnalysisApp.Services.Contracts;
 using System;
 using System.Collections.Generic;
@@ -172,6 +173,48 @@ namespace ProductAnalysisApp.Presentation.Controllers
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Fiyat bildirimi ve güncelleme sıklığını ayarlar.
+        /// intervalHours: 1 | 6 | 12 | 24 | 48 | 72
+        /// </summary>
+        [HttpPut("price-alert")]
+        [Authorize]
+        public async Task<IActionResult> UpdatePriceAlert(
+            [FromBody] UpdatePriceAlertRequest request,
+            [FromServices] UserJobScheduler jobScheduler)
+        {
+            var firebaseUid = User.GetFirebaseUid();
+            if (string.IsNullOrEmpty(firebaseUid)) return Unauthorized();
+
+            var user = await _manager.UserService.GetOneUserByFirebaseUidAsync(firebaseUid);
+            if (user == null) return NotFound();
+
+            user.PriceAlertEnabled = request.Enabled;
+            user.PriceCheckIntervalHours = request.IntervalHours;
+            await _manager.UserService.UpdateOneUserAsync(user.Id, user);
+
+            if (request.Enabled)
+                await jobScheduler.ScheduleOrUpdateAsync(firebaseUid, request.IntervalHours);
+            else
+                await jobScheduler.RemoveAsync(firebaseUid);
+
+            return NoContent();
+        }
+
+        [HttpPost("test-price-check")]
+        [Authorize]
+        public async Task<IActionResult> TestPriceCheck(
+        [FromServices] UserJobScheduler jobScheduler)
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+
+            await jobScheduler.ScheduleOrUpdateAsync(firebaseUid, intervalHours: 1);
+
+            return Ok(new { message = "Job tetiklendi, logları kontrol et." });
+        }
+
+        public record UpdatePriceAlertRequest(bool Enabled, int IntervalHours);
 
         public record UpdatePushTokenRequest(string PushToken);
     }

@@ -58,6 +58,9 @@ namespace ProductAnalysisApp.Services
             entity.Email = user.Email;
             entity.FirstName = user.FirstName;
             entity.LastName = user.LastName;
+            entity.PushToken = user.PushToken;             
+            entity.PriceAlertEnabled = user.PriceAlertEnabled;   
+            entity.PriceCheckIntervalHours = user.PriceCheckIntervalHours;
             await _manager.User.UpdateOneUserAsync(entity);
         }
     }

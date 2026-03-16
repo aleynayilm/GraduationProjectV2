@@ -25,6 +25,9 @@ namespace ProductAnalysisApp.Entities.Models
         public string Currency { get; set; }
         public List<string> ProductReviewIds { get; set; } = new List<string>();
         public List<string> FavoriteIds { get; set; } = new List<string>();
+        [BsonElement("lastPriceCheckedAt")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime? LastPriceCheckedAt { get; set; }
 
     }
 }

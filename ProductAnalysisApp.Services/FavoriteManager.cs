@@ -4,6 +4,8 @@ using ProductAnalysisApp.Entities.DataTransferObjects;
 using ProductAnalysisApp.Entities.Models;
 using ProductAnalysisApp.Repositories.Contracts;
 using ProductAnalysisApp.Services.Contracts;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +18,13 @@ namespace ProductAnalysisApp.Services
     {
         private readonly IRepositoryManager _repositoryManager;
         private readonly IMapper _mapper;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public FavoriteManager(IRepositoryManager repositoryManager, IMapper mapper)
+        public FavoriteManager(IRepositoryManager repositoryManager, IMapper mapper, IHttpClientFactory httpClientFactory)
         {
             _repositoryManager = repositoryManager;
             _mapper = mapper;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<Favorite> AddFavoriteAsync(FavoriteDtoForCreate favoriteDto)
@@ -54,6 +58,55 @@ namespace ProductAnalysisApp.Services
             return favorite;
         }
 
+        public async Task CategorizeFavoritesAsync(string firebaseUid)
+        {
+            var user = await _repositoryManager.User
+                .GetOneUserByFirebaseUidAsync(firebaseUid);
+            if (user == null) return;
+
+            var favorites = _repositoryManager.Favorite
+                .GetFavoritesByUserId(user.Id).ToList();
+            if (!favorites.Any()) return;
+
+            var items = favorites.Select(fav =>
+            {
+                var platform = _repositoryManager.ProductPlatform
+                    .GetOneProductPlatform(fav.ProductPlatformId);
+                return new
+                {
+                    favoriteId = fav.FavoriteId,
+                    url = platform?.ProductUrl ?? "",
+                    price = platform?.Price ?? 0
+                };
+            }).ToList();
+
+            var client = _httpClientFactory.CreateClient("PythonScraperService");
+            var payload = new { favorites = items };
+
+            var response = await client.PostAsJsonAsync("/categorize-favorites", payload);
+            if (!response.IsSuccessStatusCode) return;
+
+            var categorized = await response.Content
+                .ReadFromJsonAsync<List<CategorizationResult>>();
+
+            if (categorized == null) return;
+
+            foreach (var item in categorized)
+            {
+                var fav = favorites.FirstOrDefault(f => f.FavoriteId == item.FavoriteId);
+                if (fav == null) continue;
+
+                fav.Category = item.Category;
+                await _repositoryManager.Favorite.UpdateFavoriteAsync(fav);
+            }
+        }
+
+        private class CategorizationResult
+        {
+            public string FavoriteId { get; set; } = "";
+            public string Category { get; set; } = "";
+        }
+
         public async Task DeleteFavoriteAsync(string id)
         {
             var entity = _repositoryManager.Favorite.GetOneFavorite(id);
@@ -64,6 +117,38 @@ namespace ProductAnalysisApp.Services
         public IEnumerable<Favorite> GetAllFavorites() => _repositoryManager.Favorite.GetAllFavorites();
 
         public Favorite GetOneFavorite(string id) => _repositoryManager.Favorite.GetOneFavorite(id);
+
+        public async Task<List<FavoriteDetailDto>> GetUserFavoriteDetailsAsync(string firebaseUid)
+        {
+            var user = await _repositoryManager.User
+                .GetOneUserByFirebaseUidAsync(firebaseUid);
+            if (user == null) return new List<FavoriteDetailDto>();
+
+            var favorites = _repositoryManager.Favorite
+                .GetFavoritesByUserId(user.Id).ToList();
+
+            var result = new List<FavoriteDetailDto>();
+
+            foreach (var fav in favorites)
+            {
+                var platform = _repositoryManager.ProductPlatform
+                    .GetOneProductPlatform(fav.ProductPlatformId);
+
+                result.Add(new FavoriteDetailDto
+                {
+                    FavoriteId = fav.FavoriteId,
+                    ProductPlatformId = fav.ProductPlatformId,
+                    ProductUrl = platform?.ProductUrl ?? "",
+                    Price = platform?.Price ?? 0,
+                    Currency = platform?.Currency ?? "TRY",
+                    Category = fav.Category,
+                    LastPriceCheckedAt = platform?.LastPriceCheckedAt,
+                    CreatedDate = fav.CreatedDate
+                });
+            }
+
+            return result;
+        }
 
         public async Task<IEnumerable<Favorite>> GetUserFavoritesAsync(string firebaseUid)
         {

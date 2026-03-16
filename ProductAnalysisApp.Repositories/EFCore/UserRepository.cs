@@ -40,6 +40,9 @@ namespace ProductAnalysisApp.Repositories.EFCore
             existing.Email = user.Email;
             existing.FirstName = user.FirstName;
             existing.LastName = user.LastName;
+            existing.PushToken = user.PushToken;             
+            existing.PriceAlertEnabled = user.PriceAlertEnabled;  
+            existing.PriceCheckIntervalHours = user.PriceCheckIntervalHours;
 
             await UpdateAsync(u => u.Id == user.Id, existing);
         }

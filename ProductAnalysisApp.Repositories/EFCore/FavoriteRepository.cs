@@ -23,5 +23,8 @@ namespace ProductAnalysisApp.Repositories.EFCore
 
         public IQueryable<Favorite> GetFavoritesByUserId(string userId)
         => _collection.Find(f => f.UserId == userId).ToEnumerable().AsQueryable();
+
+        public async Task UpdateFavoriteAsync(Favorite favorite)
+            => await UpdateAsync(f => f.FavoriteId == favorite.FavoriteId, favorite);
     }
 }

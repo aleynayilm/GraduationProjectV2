@@ -14,5 +14,6 @@ namespace ProductAnalysisApp.Repositories.Contracts
         Task AddFavoriteAsync(Favorite favorite);
         Task DeleteFavoriteAsync(string id);
         IQueryable<Favorite> GetFavoritesByUserId(string userId);
+        Task UpdateFavoriteAsync(Favorite favorite);
     }
 }

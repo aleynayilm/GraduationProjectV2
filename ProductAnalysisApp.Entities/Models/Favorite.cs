@@ -21,5 +21,7 @@ namespace ProductAnalysisApp.Entities.Models
         public string ProductPlatformId { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        [BsonElement("category")]
+        public string? Category { get; set; }
     }
 }

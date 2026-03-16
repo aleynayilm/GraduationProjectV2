@@ -5,6 +5,7 @@ using ProductAnalysisApp.Entities.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -104,5 +105,30 @@ namespace ProductAnalysisApp.Services
             }
         }
 
+        public async Task<ScrapedProductDto?> ScrapeOneAsync(string url)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("/scrape-one", new { url });
+                if (!response.IsSuccessStatusCode) return null;
+
+                return await response.Content.ReadFromJsonAsync<ScrapedProductDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[SCRAPER] ScrapeOne hatası: {Url}", url);
+                return null;
+            }
+        }
+
+        public class ScrapedProductDto
+        {
+            public string ProductName { get; set; } = "";
+            public string PlatformName { get; set; } = "";
+            public decimal Price { get; set; }
+            public string Currency { get; set; } = "TRY";
+            public string? ImageUrl { get; set; }
+            public string ProductUrl { get; set; } = "";
+        }
     }
 }
