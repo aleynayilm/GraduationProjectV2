@@ -26,9 +26,11 @@ namespace ProductAnalysisApp.Services
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var firebaseUid = context.JobDetail.JobDataMap.GetString(DataKeyUid);
+            var firebaseUid = context.JobDetail.JobDataMap.Contains(DataKeyUid)
+            ? context.JobDetail.JobDataMap.GetString(DataKeyUid)
+            : null;
             if (string.IsNullOrEmpty(firebaseUid)) return;
-
+            
             _logger.LogInformation("[PRICE-CHECK] Başladı: {Uid}", firebaseUid);
 
             using var scope = _services.CreateScope();

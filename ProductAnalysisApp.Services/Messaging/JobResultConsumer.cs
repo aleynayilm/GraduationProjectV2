@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ProductAnalysisApp.Entities.DataTransferObjects;
 using ProductAnalysisApp.Services.Contracts;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -217,7 +218,21 @@ namespace ProductAnalysisApp.Services.Messaging
                 {
                     _logger.LogWarning(ex, "[CONSUMER] Push notification gönderilemedi.");
                 }
-
+                _logger.LogInformation("[CONSUMER] JobType={JobType} Status={Status}",
+                finalJob.JobType, finalJob.Status);
+                if (finalJob.Status == "completed" &&
+                (finalJob.JobType == "scrape" || finalJob.JobType == "compare"))
+                {
+                    try
+                    {
+                        var serviceManager = scope.ServiceProvider.GetRequiredService<IServiceManager>();
+                        await SaveScrapedProductAsync(finalJob, serviceManager);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "[CONSUMER] Ürün MongoDB'ye kaydedilemedi: {JobId}", finalJob.JobId);
+                    }
+                }
                 await _channel!.BasicAckAsync(ea.DeliveryTag, false);
                 _logger.LogInformation("[CONSUMER] ACK gönderildi: {JobId}", finalJob.JobId);
             }
@@ -233,6 +248,27 @@ namespace ProductAnalysisApp.Services.Messaging
                     _logger.LogError(nackEx, "[CONSUMER] NACK gönderilemedi.");
                 }
             }
+        }
+
+        private async Task SaveScrapedProductAsync(JobResult job, IServiceManager serviceManager)
+        {
+            if (job.Data is not JsonElement dataEl) return;
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var scrapedList = JsonSerializer.Deserialize<List<ProductForScrapingDto>>(
+                dataEl.GetRawText(), options);
+
+            if (scrapedList == null || !scrapedList.Any())
+            {
+                _logger.LogWarning("[CONSUMER] Scrape verisi boş: {JobId}", job.JobId);
+                return;
+            }
+
+            await serviceManager.ProductService.SaveScrapedProductAsync(scrapedList);
+
+            _logger.LogInformation(
+                "[CONSUMER] Ürün MongoDB'ye kaydedildi: {JobId} — {Count} platform",
+                job.JobId, scrapedList.Count);
         }
 
         private static async Task UpdateChatSessionIfNeededAsync(JobResult job, RedisService redis)

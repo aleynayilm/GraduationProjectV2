@@ -79,11 +79,10 @@ namespace ProductAnalysisApp.Presentation.Controllers
 
         [HttpGet("jobs")]
         [Authorize]
-        public IActionResult GetMyJobs()
+        public async Task<IActionResult> GetMyJobs()
         {
             var firebaseUid = User.GetFirebaseUid()!;
-            var jobs = JobResultStore.GetByUser(firebaseUid)
-                .Select(j => new { j.JobId, j.Status, j.JobType, j.CreatedAt, j.FinishedAt });
+            var jobs = await _redis.GetJobsByUserAsync(firebaseUid);
 
             return Ok(jobs);
         }

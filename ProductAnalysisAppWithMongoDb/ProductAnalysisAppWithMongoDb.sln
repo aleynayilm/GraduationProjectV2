@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisAppWithMongoDb", "ProductAnalysisAppWithMongoDb.csproj", "{F4A81AE1-1C82-4D6B-83F8-90291673FC58}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Services", "..\ProductAnalysisApp.Services\ProductAnalysisApp.Services.csproj", "{77B92F15-A82F-4AA3-8D65-FE79D567E151}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Presentation", "..\ProductAnalysisApp.Presentation\ProductAnalysisApp.Presentation.csproj", "{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductAnalysisApp.Tests", "..\ProductAnalysisApp.Tests\ProductAnalysisApp.Tests.csproj", "{C9781FB6-DA34-CB40-7826-03DDFE4B65DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9F8C7BD-2F41-416F-8ED8-05DB8510C2FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9781FB6-DA34-CB40-7826-03DDFE4B65DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9781FB6-DA34-CB40-7826-03DDFE4B65DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9781FB6-DA34-CB40-7826-03DDFE4B65DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9781FB6-DA34-CB40-7826-03DDFE4B65DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
