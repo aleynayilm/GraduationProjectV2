@@ -7,12 +7,8 @@ using ProductAnalysisApp.Extensions;
 using ProductAnalysisApp.Services;
 using ProductAnalysisApp.Services.Contracts;
 using ProductAnalysisApp.Services.Messaging;
-using StackExchange.Redis;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ProductAnalysisApp.Presentation.Controllers
@@ -25,13 +21,19 @@ namespace ProductAnalysisApp.Presentation.Controllers
         private readonly RabbitMqPublisher _rabbit;
         private readonly RedisService _redis;
         private readonly ILogger<ProductScrapingController> _logger;
-        public ProductScrapingController(IServiceManager manager, RabbitMqPublisher rabbit, ILogger<ProductScrapingController> logger, RedisService redis)
+
+        public ProductScrapingController(
+            IServiceManager manager, RabbitMqPublisher rabbit,
+            ILogger<ProductScrapingController> logger, RedisService redis)
         {
             _manager = manager;
             _rabbit = rabbit;
             _logger = logger;
             _redis = redis;
         }
+
+        // Mevcut: BS4 scrape + karsilastirma
+
         [HttpPost("scrape")]
         [Authorize]
         public async Task<ActionResult> ScrapeProduct([FromBody] ScrapeRequest request)
@@ -52,15 +54,10 @@ namespace ProductAnalysisApp.Presentation.Controllers
             });
 
             var recent = await _manager.SearchHistoryService.GetRecentSearchesAsync(firebaseUid);
-            var alreadyExists = recent.Any(h =>
-                string.Equals(h.SearchUrl, request.Url, StringComparison.OrdinalIgnoreCase));
-
-            if (!alreadyExists)
+            if (!recent.Any(h => string.Equals(h.SearchUrl, request.Url, StringComparison.OrdinalIgnoreCase)))
                 await _manager.SearchHistoryService.AddSearchAsync(request.Url, firebaseUid);
 
-            _logger.LogInformation(
-                "[JOB] Scrape kuyruğa alındı: {JobId} | User: {Uid}", jobId, firebaseUid);
-
+            _logger.LogInformation("[JOB] scrape: {JobId} | {Uid}", jobId, firebaseUid);
             return Accepted(new { jobId });
         }
 
@@ -70,10 +67,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
         {
             var firebaseUid = User.GetFirebaseUid()!;
             var result = await _redis.GetJobForUserAsync(jobId, firebaseUid);
-
-            if (result == null)
-                return Ok(new { jobId, status = "pending" });
-
+            if (result == null) return Ok(new { jobId, status = "pending" });
             return Ok(new { jobId, status = result.Status, data = result.Data });
         }
 
@@ -82,9 +76,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
         public async Task<IActionResult> GetMyJobs()
         {
             var firebaseUid = User.GetFirebaseUid()!;
-            var jobs = await _redis.GetJobsByUserAsync(firebaseUid);
-
-            return Ok(jobs);
+            return Ok(await _redis.GetJobsByUserAsync(firebaseUid));
         }
 
         [HttpGet("search-history")]
@@ -92,8 +84,93 @@ namespace ProductAnalysisApp.Presentation.Controllers
         public async Task<IActionResult> GetSearchHistory()
         {
             var firebaseUid = User.GetFirebaseUid()!;
-            var history = await _manager.SearchHistoryService.GetRecentSearchesAsync(firebaseUid);
-            return Ok(history);
+            return Ok(await _manager.SearchHistoryService.GetRecentSearchesAsync(firebaseUid));
+        }
+
+        // Tavily + RAG + Mistral 
+
+        [HttpPost("local-search")]
+        [Authorize]
+        public async Task<IActionResult> LocalSearch([FromBody] SearchRequest request)
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+
+            var jobId = await _rabbit.PublishAsync(
+                RabbitMqPublisher.QueueLocalSearch,
+                new
+                {
+                    input = request.Input,
+                    userId = firebaseUid,
+                    sessionId = request.SessionId ?? Guid.NewGuid().ToString()
+                });
+
+            await _redis.SetJobAsync(new JobResult
+            {
+                JobId = jobId,
+                Status = "pending",
+                UserId = firebaseUid,
+                JobType = "local_search"
+            });
+
+            _logger.LogInformation("[JOB] local-search: {JobId}", jobId);
+            return Accepted(new { jobId });
+        }
+
+        [HttpGet("local-search/{jobId}")]
+        [Authorize]
+        public async Task<IActionResult> GetLocalSearchResult(string jobId)
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+            var result = await _redis.GetJobForUserAsync(jobId, firebaseUid);
+            if (result == null) return Ok(new { jobId, status = "pending" });
+            return Ok(new { jobId, status = result.Status, data = result.Data });
+        }
+
+        // Tavily + RAG + Gemini 
+
+        [HttpPost("cloud-search")]
+        [Authorize]
+        public async Task<IActionResult> CloudSearch([FromBody] SearchRequest request)
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+
+            var jobId = await _rabbit.PublishAsync(
+                RabbitMqPublisher.QueueCloudSearch,
+                new
+                {
+                    input = request.Input,
+                    userId = firebaseUid,
+                    sessionId = request.SessionId ?? Guid.NewGuid().ToString()
+                });
+
+            await _redis.SetJobAsync(new JobResult
+            {
+                JobId = jobId,
+                Status = "pending",
+                UserId = firebaseUid,
+                JobType = "cloud_search"
+            });
+
+            _logger.LogInformation("[JOB] cloud-search: {JobId}", jobId);
+            return Accepted(new { jobId });
+        }
+
+        [HttpGet("cloud-search/{jobId}")]
+        [Authorize]
+        public async Task<IActionResult> GetCloudSearchResult(string jobId)
+        {
+            var firebaseUid = User.GetFirebaseUid()!;
+            var result = await _redis.GetJobForUserAsync(jobId, firebaseUid);
+            if (result == null) return Ok(new { jobId, status = "pending" });
+            return Ok(new { jobId, status = result.Status, data = result.Data });
+        }
+
+        // Request modelleri 
+
+        public class SearchRequest
+        {
+            public string Input { get; set; } = "";
+            public string? SessionId { get; set; }
         }
     }
 }

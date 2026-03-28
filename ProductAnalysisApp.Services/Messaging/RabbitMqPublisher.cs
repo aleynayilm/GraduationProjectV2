@@ -1,7 +1,6 @@
 ﻿using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -20,11 +19,14 @@ namespace ProductAnalysisApp.Services.Messaging
         public const string QueueChatLocal = "job.chat_local";
         public const string QueueChatCloud = "job.chat_cloud";
         public const string QueueResult = "job.result";
+        public const string QueueLocalSearch = "job.local_search";   // Tavily + RAG + Mistral
+        public const string QueueCloudSearch = "job.cloud_search";   // Tavily + RAG + Gemini
 
         private static readonly string[] AllQueues =
         [
-            QueueScrape, QueueCompare, QueueLocalLlm,
-            QueueCloudLlm, QueueChatLocal, QueueChatCloud, QueueResult
+            QueueScrape, QueueCompare, QueueLocalLlm, QueueCloudLlm,
+            QueueChatLocal, QueueChatCloud, QueueResult,
+            QueueLocalSearch, QueueCloudSearch
         ];
 
         private RabbitMqPublisher(IConnection conn, IChannel ch)
@@ -50,7 +52,6 @@ namespace ProductAnalysisApp.Services.Messaging
         {
             var jobId = Guid.NewGuid().ToString();
 
-            // jobId'yi payload'a ekle
             var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(
                            JsonSerializer.Serialize(payload))!;
             dict["jobId"] = jobId;
