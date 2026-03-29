@@ -101,7 +101,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 {
                     input = request.Input,
                     userId = firebaseUid,
-                    sessionId = request.SessionId ?? Guid.NewGuid().ToString()
+                    sessionId = request.SessionId ?? Guid.NewGuid().ToString(),
+                    language = request.Language
                 });
 
             await _redis.SetJobAsync(new JobResult
@@ -140,7 +141,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 {
                     input = request.Input,
                     userId = firebaseUid,
-                    sessionId = request.SessionId ?? Guid.NewGuid().ToString()
+                    sessionId = request.SessionId ?? Guid.NewGuid().ToString(),
+                    language = request.Language
                 });
 
             await _redis.SetJobAsync(new JobResult
@@ -171,6 +173,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
         {
             public string Input { get; set; } = "";
             public string? SessionId { get; set; }
+            public string Language { get; set; } = "tr"; // "tr" | "en"
         }
     }
 }

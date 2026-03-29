@@ -123,7 +123,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 message = request.Text,
                 history = historySnapshot,
                 userId = firebaseUid,
-                sessionId = sessionId
+                sessionId = sessionId,
+                language = request.Language
             });
 
             await _redis.SetJobAsync(new JobResult
@@ -219,6 +220,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
             public string Text { get; set; } = "";
             public string? SessionId { get; set; }
             public string? Mode { get; set; } = "local"; // "local" | "cloud"
+            public string Language { get; set; } = "tr";    // "tr" | "en"
         }
 
         public class SynthesizeRequest

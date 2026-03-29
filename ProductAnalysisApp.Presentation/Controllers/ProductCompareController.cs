@@ -38,7 +38,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
 
             var jobId = await _rabbit.PublishAsync(
                 RabbitMqPublisher.QueueCloudLlm,
-                new { urls = request.Urls, userId = firebaseUid });
+                new { urls = request.Urls, userId = firebaseUid, language = request.Language });
 
             await _redis.SetJobAsync(new JobResult
             {
@@ -69,7 +69,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 if (session.Count == 0 && result.Data != null)
                 {
                     var content = result.Data is JsonElement el
-                        ? el.GetRawText()                    
+                        ? el.GetRawText()
                         : JsonSerializer.Serialize(result.Data);
 
                     session.Add(new ChatMessage
@@ -92,7 +92,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
 
             var jobId = await _rabbit.PublishAsync(
              RabbitMqPublisher.QueueLocalLlm,
-             new { products = request.Products, userId = firebaseUid});
+             new { products = request.Products, userId = firebaseUid, language = request.Language });
 
             await _redis.SetJobAsync(new JobResult
             {
@@ -123,7 +123,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
                 if (session.Count == 0 && result.Data != null)
                 {
                     var content = result.Data is JsonElement el
-                        ? el.GetRawText()                    
+                        ? el.GetRawText()
                         : JsonSerializer.Serialize(result.Data);
 
                     session.Add(new ChatMessage
@@ -159,7 +159,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
                     message = request.Message,
                     history = historySnapshot,
                     userId = firebaseUid,
-                    sessionId = request.SessionId
+                    sessionId = request.SessionId,
+                    language = request.Language
                 });
 
             await _redis.SetJobAsync(new JobResult
@@ -193,7 +194,8 @@ namespace ProductAnalysisApp.Presentation.Controllers
                     message = request.Message,
                     history = historySnapshot,
                     userId = firebaseUid,
-                    sessionId = request.SessionId 
+                    sessionId = request.SessionId,
+                    language = request.Language
                 });
 
             await _redis.SetJobAsync(new JobResult
@@ -216,15 +218,21 @@ namespace ProductAnalysisApp.Presentation.Controllers
             return Ok(result ?? new JobResult { JobId = jobId, Status = "pending" });
         }
 
-        public class UrlRequest { 
-            public List<string> Urls { get; set; } = []; 
+        public class UrlRequest
+        {
+            public List<string> Urls { get; set; } = [];
+            public string Language { get; set; } = "tr"; // "tr" | "en"
         }
-        public class LocalLlmCompareRequest { 
-            public List<ProductForComparisonDto> Products { get; set; } = []; 
+        public class LocalLlmCompareRequest
+        {
+            public List<ProductForComparisonDto> Products { get; set; } = [];
+            public string Language { get; set; } = "tr"; // "tr" | "en"
         }
-        public class ContinueChatRequest {
-            public string SessionId { get; set; } = ""; 
-            public string Message { get; set; } = ""; 
+        public class ContinueChatRequest
+        {
+            public string SessionId { get; set; } = "";
+            public string Message { get; set; } = "";
+            public string Language { get; set; } = "tr"; // "tr" | "en"
         }
     }
 }
