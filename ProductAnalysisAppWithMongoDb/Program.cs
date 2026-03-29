@@ -52,6 +52,13 @@ builder.Services.AddQuartz(q =>
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 builder.Services.AddSingleton<UserJobScheduler>();
 
+// STT + TTS
+builder.Services.AddHttpClient<SpeechService>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(3);
+});
+builder.Services.AddScoped<SpeechService>();
+
 // Email
 builder.Services.AddScoped<EmailService>();
 builder.Services.ConfigureMongoContext(builder.Configuration);
