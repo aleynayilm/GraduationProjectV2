@@ -5,10 +5,6 @@ using System.Security.Claims;
 
 namespace ProductAnalysisApp.Tests.Controllers
 {
-    /// <summary>
-    /// Tüm controller testleri için ortak base class.
-    /// Authenticated kullanıcı simülasyonu sağlar.
-    /// </summary>
     public abstract class ControllerTestBase
     {
         protected const string TestFirebaseUid = "firebase-uid-test-001";

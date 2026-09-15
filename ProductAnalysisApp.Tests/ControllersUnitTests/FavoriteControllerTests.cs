@@ -44,7 +44,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             };
         }
 
-        // ── GetMyFavorites ───────────────────────────────────────────────
+        // GetMyFavorites
 
         [Fact]
         public async Task GetMyFavorites_ShouldReturn200WithFavoriteDetails()
@@ -82,7 +82,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<UnauthorizedResult>();
         }
 
-        // ── AddFavorite ──────────────────────────────────────────────────
+        // AddFavorite 
 
         [Fact]
         public async Task AddFavorite_WithValidRequest_ShouldReturn201()
@@ -120,7 +120,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             bad.StatusCode.Should().Be(400);
         }
 
-        // ── RemoveFavorite ───────────────────────────────────────────────
+        // RemoveFavorite 
 
         [Fact]
         public async Task RemoveFavorite_WhenOwner_ShouldReturn204()
@@ -186,7 +186,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        // ── ToggleFavorite ───────────────────────────────────────────────
+        // ToggleFavorite 
 
         [Fact]
         public async Task ToggleFavorite_WhenNotFavorited_ShouldAddAndReturnAdded()
@@ -241,7 +241,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             _favoriteServiceMock.Verify(s => s.DeleteFavoriteAsync("fav-001"), Times.Once);
         }
 
-        // ── CategorizeFavorites ──────────────────────────────────────────
+        // CategorizeFavorites 
 
         [Fact]
         public void CategorizeFavorites_ShouldReturn202Immediately()

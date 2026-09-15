@@ -26,7 +26,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             _sut = new SearchHistoryManager(_repoMock.Object);
         }
 
-        // ── AddSearchAsync ───────────────────────────────────────────────
+        // AddSearchAsync 
 
         [Fact]
         public async Task AddSearchAsync_WithValidUrl_ShouldSaveToRepository()
@@ -102,7 +102,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             captured.SearchDate.Should().BeOnOrBefore(after);
         }
 
-        // ── GetRecentSearchesAsync ───────────────────────────────────────
+        // GetRecentSearchesAsync 
 
         [Fact]
         public async Task GetRecentSearchesAsync_ShouldReturnUserHistories()

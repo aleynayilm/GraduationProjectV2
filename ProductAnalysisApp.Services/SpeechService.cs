@@ -6,11 +6,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using ProductAnalysisApp.Services.Contracts;
 
 namespace ProductAnalysisApp.Services
 {
 
-    public class SpeechService
+    public class SpeechService : ISpeechService
     {
         private readonly HttpClient _http;
         private readonly string _groqKey;
@@ -22,7 +23,7 @@ namespace ProductAnalysisApp.Services
 
         // ElevenLabs
         private const string ElevenBase = "https://api.elevenlabs.io/";
-        private const string ElevenModel = "eleven_multilingual_v2"; // Türkçe dahil 29 dil
+        private const string ElevenModel = "eleven_multilingual_v2";
 
         // Hazır sesler — ElevenLabs default kütüphanesi
         public static class Voices
@@ -110,7 +111,6 @@ namespace ProductAnalysisApp.Services
             if (string.IsNullOrWhiteSpace(text))
                 return Fail<SynthesizeResult>("Metin boş");
 
-            // ElevenLabs max 5000 karakter per istek
             if (text.Length > 5000)
                 text = text[..5000];
 
@@ -124,7 +124,7 @@ namespace ProductAnalysisApp.Services
                 {
                     stability,
                     similarity_boost = similarityBoost,
-                    style = 0.0,   // abartılı stil kapalı — doğal konuşma
+                    style = 0.0,  
                     use_speaker_boost = true
                 }
             });

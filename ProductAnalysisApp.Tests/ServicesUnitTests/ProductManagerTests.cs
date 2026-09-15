@@ -33,7 +33,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             _sut = new ProductManager(_repoMock.Object, _mapperMock.Object);
         }
 
-        // ── SaveScrapedProductAsync ──────────────────────────────────────
+        // SaveScrapedProductAsync 
 
         [Fact]
         public async Task SaveScrapedProductAsync_WithValidData_ShouldSaveProductAndPlatforms()
@@ -106,13 +106,13 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             // Act
             var result = await _sut.SaveScrapedProductAsync(scrapedList);
 
-            // Assert — ürün kaydedilir ama platform kaydedilmez
+            // Assert 
             result.Should().HaveCount(1);
             _platformRepoMock.Verify(
                 r => r.AddProductPlatformAsync(It.IsAny<ProductPlatform>()), Times.Never);
         }
 
-        // ── ParsePriceStringToDecimal (dolaylı test) ─────────────────────
+        // ParsePriceStringToDecimal 
 
         [Theory]
         [InlineData("1.500,00", 1500.00)]
@@ -151,7 +151,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             captured!.Price.Should().Be(expectedPrice);
         }
 
-        // ── GetPlatformNameById ──────────────────────────────────────────
+        // GetPlatformNameById 
 
         [Theory]
         [InlineData("692d65ec17d42f6575ed568d", "trendyol")]

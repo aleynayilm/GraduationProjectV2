@@ -22,7 +22,6 @@ namespace ProductAnalysisApp.Presentation.Controllers
             _searchHistoryService = serviceManager.SearchHistoryService;
         }
 
-        // GET: api/SearchHistory/recent
         [HttpGet("recent")]
         public async Task<IActionResult> GetRecentSearchesAsync()
         {
@@ -34,7 +33,6 @@ namespace ProductAnalysisApp.Presentation.Controllers
             return Ok(searches);
         }
 
-        // POST: api/SearchHistory/add
         [HttpPost("add")]
         public async Task<IActionResult> AddSearchAsync([FromBody] string url)
         {

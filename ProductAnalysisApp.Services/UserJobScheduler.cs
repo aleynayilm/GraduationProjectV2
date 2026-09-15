@@ -24,7 +24,7 @@ namespace ProductAnalysisApp.Services
         /// Kullanıcı için fiyat kontrol job'ını oluşturur veya günceller.
         /// intervalHours: 1, 6, 12, 24, 48, 72 gibi değerler
         /// </summary>
-        public async Task ScheduleOrUpdateAsync(string firebaseUid, int intervalHours)
+        public virtual async Task ScheduleOrUpdateAsync(string firebaseUid, int intervalHours)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobKey = PriceCheckJob.KeyFor(firebaseUid);
@@ -58,7 +58,7 @@ namespace ProductAnalysisApp.Services
         /// Kullanıcının job'ını durdurur ve siler.
         /// Fiyat bildirimi kapatıldığında veya kullanıcı silindiğinde çağrılır.
         /// </summary>
-        public async Task RemoveAsync(string firebaseUid)
+        public virtual async Task RemoveAsync(string firebaseUid)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobKey = PriceCheckJob.KeyFor(firebaseUid);

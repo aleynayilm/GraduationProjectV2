@@ -73,7 +73,6 @@ namespace ProductAnalysisApp.Presentation.Controllers
             var firebaseUid = User.GetFirebaseUid();
             if (string.IsNullOrEmpty(firebaseUid)) return Unauthorized();
 
-            // Favori başka kullanıcıya ait mi kontrol et
             var favorite = _serviceManager.FavoriteService.GetOneFavorite(favoriteId);
             if (favorite == null) return NotFound();
 

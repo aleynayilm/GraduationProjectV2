@@ -9,9 +9,36 @@ namespace ProductAnalysisAppWithMongoDb.Utilities.AutoMapper
     {
         public MappingProfile()
         {
-            CreateMap<ProductForScrapingDto, Product>();
-            CreateMap<FavoriteDtoForCreate, Favorite>();
-            CreateMap<ProductDtoForCreate, Product>();
+            // ProductForScrapingDto → Product
+            CreateMap<ProductForScrapingDto, Product>()
+                .ForMember(dest => dest.Name,
+                    opt => opt.MapFrom(src => src.ProductName))
+                .ForMember(dest => dest.ImageUrl,
+                    opt => opt.MapFrom(src => src.ImageUrl))
+                .ForMember(dest => dest.ProductPlatformIds,
+                    opt => opt.Ignore())
+                .ForMember(dest => dest.ProductId,
+                    opt => opt.Ignore())
+                .ForMember(dest => dest.CategoryId,
+                    opt => opt.Ignore());
+
+            // FavoriteDtoForCreate → Favorite
+            CreateMap<FavoriteDtoForCreate, Favorite>()
+                .ForMember(dest => dest.UserId,
+                    opt => opt.MapFrom(src => src.FirebaseUid))
+                .ForMember(dest => dest.FavoriteId,
+                    opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate,
+                    opt => opt.Ignore())
+                .ForMember(dest => dest.Category,
+                    opt => opt.Ignore());
+
+            // ProductDtoForCreate → Product
+            CreateMap<ProductDtoForCreate, Product>()
+                .ForMember(dest => dest.ProductId,
+                    opt => opt.Ignore())
+                .ForMember(dest => dest.ProductPlatformIds,
+                    opt => opt.Ignore());
         }
     }
 }

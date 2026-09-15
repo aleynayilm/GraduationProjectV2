@@ -39,7 +39,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             };
         }
 
-        // ── GetAllUsers ──────────────────────────────────────────────────
+        // GetAllUsers 
 
         [Fact]
         public async Task GetAllUsers_ShouldReturn200WithUserList()
@@ -74,7 +74,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             status.StatusCode.Should().Be(500);
         }
 
-        // ── GetOneUser ───────────────────────────────────────────────────
+        // GetOneUser 
 
         [Fact]
         public async Task GetOneUser_WhenExists_ShouldReturn200()
@@ -117,7 +117,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<UnauthorizedResult>();
         }
 
-        // ── CreateOneUser ────────────────────────────────────────────────
+        // CreateOneUser 
 
         [Fact]
         public async Task CreateOneUser_WithNewUser_ShouldReturn201()
@@ -181,7 +181,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<BadRequestObjectResult>();
         }
 
-        // ── RegisterUserFromFirebase ─────────────────────────────────────
+        // RegisterUserFromFirebase 
 
         [Fact]
         public async Task RegisterUserFromFirebase_WhenNewUser_ShouldReturn201()
@@ -236,7 +236,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<UnauthorizedResult>();
         }
 
-        // ── UpdatePushToken ──────────────────────────────────────────────
+        // UpdatePushToken 
 
         [Fact]
         public async Task UpdatePushToken_WhenUserExists_ShouldReturn204()
@@ -280,7 +280,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        // ── UpdateOneUser ────────────────────────────────────────────────
+        // UpdateOneUser 
 
         [Fact]
         public async Task UpdateOneUser_WhenValid_ShouldReturn204()
@@ -307,7 +307,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<BadRequestResult>();
         }
 
-        // ── DeleteOneUser ────────────────────────────────────────────────
+        // DeleteOneUser 
 
         [Fact]
         public async Task DeleteOneUser_WhenExists_ShouldReturn204()

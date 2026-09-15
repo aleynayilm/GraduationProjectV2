@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using ProductAnalysisApp.Services.Contracts;
+using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ProductAnalysisApp.Services.Messaging
 {
-    public class RabbitMqPublisher : IAsyncDisposable
+    public class RabbitMqPublisher : IAsyncDisposable, IRabbitMqPublisher
     {
         private readonly IConnection _connection;
         private readonly IChannel _channel;
@@ -48,6 +49,7 @@ namespace ProductAnalysisApp.Services.Messaging
             return new RabbitMqPublisher(connection, channel);
         }
 
+        // RabbitMqPublisher.cs — Services/Messaging
         public async Task<string> PublishAsync(string queueName, object payload)
         {
             var jobId = Guid.NewGuid().ToString();

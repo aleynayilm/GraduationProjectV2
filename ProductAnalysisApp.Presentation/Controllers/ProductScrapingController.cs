@@ -18,13 +18,13 @@ namespace ProductAnalysisApp.Presentation.Controllers
     public class ProductScrapingController : ControllerBase
     {
         private readonly IServiceManager _manager;
-        private readonly RabbitMqPublisher _rabbit;
-        private readonly RedisService _redis;
+        private readonly IRabbitMqPublisher _rabbit;
+        private readonly IRedisService _redis;
         private readonly ILogger<ProductScrapingController> _logger;
 
         public ProductScrapingController(
-            IServiceManager manager, RabbitMqPublisher rabbit,
-            ILogger<ProductScrapingController> logger, RedisService redis)
+            IServiceManager manager, IRabbitMqPublisher rabbit,
+            ILogger<ProductScrapingController> logger, IRedisService redis)
         {
             _manager = manager;
             _rabbit = rabbit;
@@ -173,7 +173,7 @@ namespace ProductAnalysisApp.Presentation.Controllers
         {
             public string Input { get; set; } = "";
             public string? SessionId { get; set; }
-            public string Language { get; set; } = "tr"; // "tr" | "en"
+            public string Language { get; set; } = "tr";
         }
     }
 }

@@ -37,7 +37,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             };
         }
 
-        // ── GetAllProducts ───────────────────────────────────────────────
+        // GetAllProducts 
 
         [Fact]
         public void GetAllProducts_ShouldReturn200WithList()
@@ -55,7 +55,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             ok.Value.Should().NotBeNull();
         }
 
-        // ── GetOneProduct ────────────────────────────────────────────────
+        // GetOneProduct 
 
         [Fact]
         public void GetOneProduct_WhenExists_ShouldReturn200()
@@ -88,7 +88,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<NotFoundResult>();
         }
 
-        // ── AddOneProduct ────────────────────────────────────────────────
+        // AddOneProduct 
 
         [Fact]
         public async Task AddOneProduct_WithValidDto_ShouldReturn201()
@@ -118,7 +118,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<BadRequestResult>();
         }
 
-        // ── UpdateOneProduct ─────────────────────────────────────────────
+        // UpdateOneProduct 
 
         [Fact]
         public async Task UpdateOneProduct_ShouldReturn204()
@@ -135,7 +135,7 @@ namespace ProductAnalysisApp.Tests.Controllers
             result.Should().BeOfType<NoContentResult>();
         }
 
-        // ── DeleteOneProduct ─────────────────────────────────────────────
+        // DeleteOneProduct 
 
         [Fact]
         public async Task DeleteOneProduct_ShouldReturn204()

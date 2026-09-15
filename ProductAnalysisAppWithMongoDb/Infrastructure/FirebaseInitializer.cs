@@ -15,12 +15,10 @@ namespace ProductAnalysisAppWithMongoDb.Infrastructure
 
             if (!string.IsNullOrEmpty(credentialPath) && File.Exists(credentialPath))
             {
-                // serviceAccount.json dosya yolu ile
                 credential = GoogleCredential.FromFile(credentialPath);
             }
             else
             {
-                // Ya da JSON string olarak environment variable'dan
                 var json = configuration["Firebase:CredentialJson"]
                     ?? throw new InvalidOperationException(
                         "Firebase credential bulunamadı. " +

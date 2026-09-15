@@ -1,4 +1,5 @@
-﻿using ProductAnalysisApp.Services.Messaging;
+﻿using ProductAnalysisApp.Services.Contracts;
+using ProductAnalysisApp.Services.Messaging;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ProductAnalysisApp.Services
 {
-    public class RedisService
+    public class RedisService: IRedisService
     {
         private readonly IDatabase _db;
         private readonly TimeSpan _jobTtl = TimeSpan.FromHours(24);

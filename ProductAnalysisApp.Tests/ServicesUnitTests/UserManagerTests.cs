@@ -40,7 +40,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             };
         }
 
-        // ── CreateOneUserAsync ───────────────────────────────────────────
+        // CreateOneUserAsync 
 
         [Fact]
         public async Task CreateOneUserAsync_WithValidUser_ShouldCreate()
@@ -67,7 +67,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
                 .Should().ThrowAsync<ArgumentNullException>();
         }
 
-        // ── UpdateOneUserAsync ───────────────────────────────────────────
+        // UpdateOneUserAsync 
 
         [Fact]
         public async Task UpdateOneUserAsync_ShouldUpdateAllFields()
@@ -122,7 +122,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
                 .WithMessage("*nonexistent*");
         }
 
-        // ── DeleteOneUserAsync ───────────────────────────────────────────
+        // DeleteOneUserAsync 
 
         [Fact]
         public async Task DeleteOneUserAsync_WhenExists_ShouldDelete()
@@ -157,7 +157,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
                 .WithMessage("*nonexistent*");
         }
 
-        // ── GetAllUsersAsync ─────────────────────────────────────────────
+        // GetAllUsersAsync 
 
         [Fact]
         public async Task GetAllUsersAsync_ShouldReturnAllUsers()
@@ -176,7 +176,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             result.Should().HaveCount(2);
         }
 
-        // ── GetOneUserByFirebaseUidAsync ─────────────────────────────────
+        // GetOneUserByFirebaseUidAsync 
 
         [Fact]
         public async Task GetOneUserByFirebaseUidAsync_WhenExists_ShouldReturnUser()

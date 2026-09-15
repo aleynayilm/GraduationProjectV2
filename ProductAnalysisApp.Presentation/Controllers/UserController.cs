@@ -174,10 +174,6 @@ namespace ProductAnalysisApp.Presentation.Controllers
             return NoContent();
         }
 
-        /// <summary>
-        /// Fiyat bildirimi ve güncelleme sıklığını ayarlar.
-        /// intervalHours: 1 | 6 | 12 | 24 | 48 | 72
-        /// </summary>
         [HttpPut("price-alert")]
         [Authorize]
         public async Task<IActionResult> UpdatePriceAlert(

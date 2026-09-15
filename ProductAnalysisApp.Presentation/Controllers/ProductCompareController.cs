@@ -4,6 +4,7 @@ using ProductAnalysisApp.Entities.DataTransferObjects;
 using ProductAnalysisApp.Entities.Models;
 using ProductAnalysisApp.Extensions;
 using ProductAnalysisApp.Services;
+using ProductAnalysisApp.Services.Contracts;
 using ProductAnalysisApp.Services.Messaging;
 using StackExchange.Redis;
 using System;
@@ -21,10 +22,10 @@ namespace ProductAnalysisApp.Presentation.Controllers
     [Route("api/[controller]")]
     public class ProductCompareController : ControllerBase
     {
-        private readonly RabbitMqPublisher _rabbit;
-        private readonly RedisService _redis;
+        private readonly IRabbitMqPublisher _rabbit;
+        private readonly IRedisService _redis;
 
-        public ProductCompareController(RabbitMqPublisher rabbit, RedisService redis)
+        public ProductCompareController(IRabbitMqPublisher rabbit, IRedisService redis)
         {
             _redis = redis;
             _rabbit = rabbit;
@@ -221,18 +222,18 @@ namespace ProductAnalysisApp.Presentation.Controllers
         public class UrlRequest
         {
             public List<string> Urls { get; set; } = [];
-            public string Language { get; set; } = "tr"; // "tr" | "en"
+            public string Language { get; set; } = "tr"; 
         }
         public class LocalLlmCompareRequest
         {
             public List<ProductForComparisonDto> Products { get; set; } = [];
-            public string Language { get; set; } = "tr"; // "tr" | "en"
+            public string Language { get; set; } = "tr"; 
         }
         public class ContinueChatRequest
         {
             public string SessionId { get; set; } = "";
             public string Message { get; set; } = "";
-            public string Language { get; set; } = "tr"; // "tr" | "en"
+            public string Language { get; set; } = "tr"; 
         }
     }
 }

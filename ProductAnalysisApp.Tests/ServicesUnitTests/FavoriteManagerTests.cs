@@ -18,7 +18,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
 {
     public class FavoriteManagerTests
     {
-        // ── Test fixtures ────────────────────────────────────────────────
+        // Test fixtures
         private readonly Mock<IRepositoryManager>           _repoMock;
         private readonly Mock<IUserRepository>              _userRepoMock;
         private readonly Mock<IFavoriteRepository>          _favoriteRepoMock;
@@ -75,7 +75,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             };
         }
 
-        // ── AddFavoriteAsync ─────────────────────────────────────────────
+        // AddFavoriteAsync 
 
         [Fact]
         public async Task AddFavoriteAsync_WhenProductAndUserExist_ShouldCreateFavorite()
@@ -205,7 +205,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
                 .Should().ThrowAsync<ArgumentNullException>();
         }
 
-        // ── DeleteFavoriteAsync ──────────────────────────────────────────
+        // DeleteFavoriteAsync 
 
         [Fact]
         public async Task DeleteFavoriteAsync_WhenExists_ShouldDelete()
@@ -241,7 +241,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
                 .WithMessage("*nonexistent*");
         }
 
-        // ── GetUserFavoriteDetailsAsync ───────────────────────────────────
+        // GetUserFavoriteDetailsAsync 
 
         [Fact]
         public async Task GetUserFavoriteDetailsAsync_ShouldReturnDetailsWithPlatformInfo()
@@ -286,7 +286,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             result.Should().BeEmpty();
         }
 
-        // ── CategorizeFavoritesAsync ──────────────────────────────────────
+        // CategorizeFavoritesAsync 
 
         [Fact]
         public async Task CategorizeFavoritesAsync_WhenApiReturnsCategories_ShouldUpdateFavorites()
@@ -353,9 +353,50 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             _httpFactoryMock.Verify(
                 f => f.CreateClient(It.IsAny<string>()), Times.Never);
         }
+
+        // GetUserFavoritesAsync 
+
+        [Fact]
+        public async Task GetUserFavoritesAsync_WhenUidEmpty_ThrowsArgumentNullException()
+        {
+            await _sut.Invoking(s => s.GetUserFavoritesAsync(""))
+                .Should().ThrowAsync<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task GetUserFavoritesAsync_WhenUidWhitespace_ThrowsArgumentNullException()
+        {
+            await _sut.Invoking(s => s.GetUserFavoritesAsync("   "))
+                .Should().ThrowAsync<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task GetUserFavoritesAsync_WhenUserNotFound_ReturnsEmpty()
+        {
+            _userRepoMock.Setup(r => r.GetOneUserByFirebaseUidAsync("unknown-uid"))
+                .ReturnsAsync((User?)null);
+
+            var result = await _sut.GetUserFavoritesAsync("unknown-uid");
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetUserFavoritesAsync_WhenUserFound_ReturnsFavorites()
+        {
+            _userRepoMock.Setup(r => r.GetOneUserByFirebaseUidAsync("firebase-uid-001"))
+                .ReturnsAsync(_testUser);
+
+            _favoriteRepoMock.Setup(r => r.GetFavoritesByUserId("user-001"))
+                .Returns(new List<Favorite> { _testFavorite, new Favorite { FavoriteId = "fav-2", UserId = "user-001" } }.AsQueryable());
+
+            var result = await _sut.GetUserFavoritesAsync("firebase-uid-001");
+
+            result.Should().HaveCount(2);
+        }
     }
 
-    // ── Fake HTTP handler ────────────────────────────────────────────────
+    // Fake HTTP handler 
     public class FakeHttpMessageHandler : HttpMessageHandler
     {
         private readonly string     _responseContent;

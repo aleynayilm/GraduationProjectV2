@@ -26,7 +26,6 @@ namespace ProductAnalysisApp.Repositories.EFCore
         public IMongoCollection<Platform> Platforms => _database.GetCollection<Platform>("Platforms");
         public IMongoCollection<Product> Products => _database.GetCollection<Product>("Products");
         public IMongoCollection<ProductPlatform> ProductPlatforms => _database.GetCollection<ProductPlatform>("ProductPlatforms");
-        public IMongoCollection<ProductReview> ProductReviews => _database.GetCollection<ProductReview>("ProductReviews");
         public IMongoCollection<SearchHistory> SearchHistories => _database.GetCollection<SearchHistory>("SearchHistories");
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
     }

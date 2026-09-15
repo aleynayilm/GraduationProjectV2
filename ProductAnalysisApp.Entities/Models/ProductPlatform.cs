@@ -23,8 +23,8 @@ namespace ProductAnalysisApp.Entities.Models
         [BsonRepresentation(BsonType.Decimal128)]
         public decimal Price { get; set; }
         public string Currency { get; set; }
-        public List<string> ProductReviewIds { get; set; } = new List<string>();
         public List<string> FavoriteIds { get; set; } = new List<string>();
+
         [BsonElement("lastPriceCheckedAt")]
         [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         public DateTime? LastPriceCheckedAt { get; set; }

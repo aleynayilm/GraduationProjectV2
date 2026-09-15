@@ -108,7 +108,6 @@ namespace ProductAnalysisApp.Services.Messaging
                     arguments: null,
                     cancellationToken: stoppingToken);
 
-                // Aynı anda en fazla 1 mesaj işle
                 await _channel.BasicQosAsync(
                     prefetchSize: 0,
                     prefetchCount: 1,

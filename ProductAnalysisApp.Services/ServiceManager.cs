@@ -21,10 +21,10 @@ namespace ProductAnalysisApp.Services
             private readonly Lazy<IProductPlatformService> _productPlatformService;
             private readonly Lazy<ISearchHistoryService> _searchHistoryService;
             private readonly Lazy<IFavoriteService> _favoriteService;
-            public ServiceManager(IRepositoryManager repositoryManager, /*ILoggerService logger*/
+            public ServiceManager(IRepositoryManager repositoryManager,
                 IMapper mapper, IHttpClientFactory httpClientFactory)
             {
-                _userService = new Lazy<IUserService>(() => new UserManager(repositoryManager/*, mapper*/));
+                _userService = new Lazy<IUserService>(() => new UserManager(repositoryManager));
                 _productService = new Lazy<IProductService>(() => new ProductManager(repositoryManager, mapper));
                 _favoriteService = new Lazy<IFavoriteService>(() => new FavoriteManager(repositoryManager, mapper, httpClientFactory));
                 _productPlatformService = new Lazy<IProductPlatformService>(() => new ProductPlatformManager(repositoryManager));

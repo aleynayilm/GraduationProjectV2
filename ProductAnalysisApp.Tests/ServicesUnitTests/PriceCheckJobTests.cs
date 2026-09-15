@@ -45,12 +45,9 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             _repoMock.Setup(r => r.Favorite).Returns(_favoriteRepoMock.Object);
             _repoMock.Setup(r => r.ProductPlatform).Returns(_platformRepoMock.Object);
 
-            // EmailService ve FcmService mock'ları — concrete sınıflar olduğu için
-            // virtual metod gerektirmeden mock oluşturmak için ayrı servis olarak register edilir
             var services = new ServiceCollection();
             services.AddSingleton(_repoMock.Object);
 
-            // PythonScraperService mock'u — HttpClient gerektirdiği için ServiceCollection üzerinden
             var httpClient = new HttpClient
             {
                 BaseAddress = new Uri("http://localhost:8000")
@@ -106,7 +103,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
             _contextMock.Setup(c => c.JobDetail).Returns(jobDetailMock.Object);
         }
 
-        // ── Execute — kullanıcı bulunamadı ───────────────────────────────
+        // Execute — kullanıcı bulunamadı 
 
         [Fact]
         public async Task Execute_WhenUserNotFound_ShouldReturnEarly()
@@ -167,7 +164,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
                 r => r.GetOneProductPlatform(It.IsAny<string>()), Times.Never);
         }
 
-        // ── Execute — firebaseUid boş ────────────────────────────────────
+        // Execute — firebaseUid boş 
 
         [Fact]
         public async Task Execute_WhenFirebaseUidMissing_ShouldReturnEarly()
@@ -190,8 +187,7 @@ namespace ProductAnalysisApp.Tests.ServicesUnitTests
         }
     }
 
-    // ── PriceCheckJob mantık testleri (CheckAndNotifyAsync dolaylı) ──────
-    // Bu testler iş mantığını doğrudan test eder
+    // PriceCheckJob mantık testleri 
 
     public class PriceCheckLogicTests
     {
